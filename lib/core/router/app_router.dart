@@ -26,11 +26,10 @@ class AppRoutes {
 // ── Router Provider ───────────────────────────────────────────────────────────
 
 final routerProvider = Provider<GoRouter>((ref) {
-  final authState = ref.watch(authStateProvider);
-
-  return GoRouter(
+  final router = GoRouter(
     initialLocation: AppRoutes.dashboard,
     redirect: (context, state) {
+      final authState = ref.read(authStateProvider);
       final isLoggedIn = authState.maybeWhen(
         data: (user) => user != null,
         orElse: () => false,
@@ -85,6 +84,10 @@ final routerProvider = Provider<GoRouter>((ref) {
       ),
     ],
   );
+
+  ref.listen(authStateProvider, (_, __) => router.refresh());
+  ref.onDispose(router.dispose);
+  return router;
 });
 
 CustomTransitionPage<void> _fade(Widget child) => CustomTransitionPage<void>(

@@ -1,3 +1,4 @@
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -7,13 +8,32 @@ import '../../core/theme/app_theme.dart';
 import '../../shared/widgets/top_bar.dart';
 import '../../shared/widgets/vib_button.dart';
 import '../../shared/widgets/vib_card.dart';
-import 'project_card.dart';
+import '../auth/auth_provider.dart';
 import 'new_project_dialog.dart';
+import 'project_card.dart';
 
 // ── Providers ─────────────────────────────────────────────────────────────────
 
 final projectsProvider = FutureProvider<List<Project>>((ref) async {
-  final resp = await ApiClient.instance.dio.get('/projects');
+  final authState = ref.watch(authStateProvider);
+  if (authState.isLoading) {
+    debugPrint('[projectsProvider] auth loading; waiting');
+    await ref.watch(authStateProvider.future);
+  }
+  final user = ref.read(authStateProvider).valueOrNull;
+  if (user == null) {
+    debugPrint('[projectsProvider] no user; skip fetch');
+    return <Project>[];
+  }
+
+  final token = await ApiClient.instance.ensureToken();
+  debugPrint('[projectsProvider] token len=${token?.length ?? 0}');
+  if (token == null || token.isEmpty) return <Project>[];
+
+  final resp = await ApiClient.instance.dio.get(
+    '/projects',
+    options: Options(headers: {'Authorization': 'Bearer $token'}),
+  );
   return (resp.data as List)
       .map((p) => Project.fromJson(p as Map<String, dynamic>))
       .toList();
