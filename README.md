@@ -6,10 +6,18 @@ Internal project management UI. API base URL is set at **build time** via `--dar
 
 1. Push to `main`.
 2. In the GitHub repo: **Settings → Pages → Build and deployment → Source: GitHub Actions**.
-3. Add a repository secret **`API_URL`** with your public API root, e.g. `https://your-backend.example.com/api`.
+3. **API URL (build-time):** The workflow bakes in `API_URL` with this priority: secret **`API_URL`** → variable **`PUBLIC_API_URL`** → default **`http://vib-pm-flutter-backend.us-east-1.elasticbeanstalk.com/api`** (see `.github/workflows/deploy_web.yml`).
 4. On your API server, set **`CORS_ORIGIN`** to `https://dangkhoaow.github.io` (or `*` for demos only).
 
 App URL (project pages): `https://dangkhoaow.github.io/flutter_app/`
+
+### HTTPS / mixed content
+
+GitHub Pages is served over **HTTPS**. Browsers **block** `fetch`/XHR from that page to an **HTTP** API (mixed content). The default Elastic Beanstalk URL is **HTTP only**. If login still fails after a rebuild, open DevTools → Console and look for **mixed content** errors.
+
+**Fix:** expose the API on **HTTPS** (e.g. Elastic Beanstalk **load balancer + ACM certificate**, **CloudFront** in front of EB, or **Cloudflare** “Flexible” SSL to the origin), then set repository secret **`API_URL`** to `https://your-host/api` and run the Pages workflow again.
+
+The `web/` folder includes **`manifest.json`**, **`favicon.png`**, and **`icons/`** so PWA assets are not 404 on Pages.
 
 ## Backend + database (low cost)
 

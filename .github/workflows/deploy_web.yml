@@ -2,8 +2,11 @@
 # Repo: https://github.com/dangkhoaow/flutter_app
 #
 # After first push: Settings → Pages → Source: GitHub Actions.
-# Add repository secret API_URL (e.g. https://your-api.example.com/api).
-# Set backend CORS_ORIGIN to https://dangkhoaow.github.io
+# Optional: secret API_URL or variable PUBLIC_API_URL overrides the default below.
+# Default API is the Elastic Beanstalk demo host (HTTP). GitHub Pages is HTTPS — if the
+# browser blocks mixed content, put HTTPS in front of the API (e.g. CloudFront/ALB) and
+# set API_URL to that https://.../api URL.
+# Set backend CORS_ORIGIN to https://dangkhoaow.github.io (or * for demos).
 
 name: Deploy Flutter Web to GitHub Pages
 
@@ -36,13 +39,19 @@ jobs:
         run: flutter pub get
 
       - name: Build web
+        env:
+          DEFAULT_API_URL: http://vib-pm-flutter-backend.us-east-1.elasticbeanstalk.com/api
         run: |
           set -e
           API_URL="${{ secrets.API_URL }}"
           if [ -z "$API_URL" ]; then
-            echo "::warning::Secret API_URL is not set. Using localhost default; set API_URL in repo Settings → Secrets for production."
-            API_URL="http://localhost:3000/api"
+            API_URL="${{ vars.PUBLIC_API_URL }}"
           fi
+          if [ -z "$API_URL" ]; then
+            API_URL="$DEFAULT_API_URL"
+            echo "::notice::Using default API_URL (Elastic Beanstalk). Override with secret API_URL or variable PUBLIC_API_URL."
+          fi
+          echo "API_URL length check OK (not printing value)."
           flutter build web --release \
             --base-href /flutter_app/ \
             --dart-define=API_URL="$API_URL"
