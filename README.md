@@ -17,6 +17,8 @@ GitHub Pages is served over **HTTPS**. Browsers **block** `fetch`/XHR from that 
 
 **Fix:** expose the API on **HTTPS** (e.g. Elastic Beanstalk **load balancer + ACM certificate**, **CloudFront** in front of EB, or **Cloudflare** “Flexible” SSL to the origin), then set repository secret **`API_URL`** to `https://your-host/api` and run the Pages workflow again.
 
+**Quick HTTPS shim:** deploy **`infra/cloudflare-worker-proxy.js`** as a [Cloudflare Worker](https://developers.cloudflare.com/workers/) (free tier), then set secret **`API_URL`** to `https://<your-worker>.<account>.workers.dev/api` and re-run the workflow. The worker forwards to the HTTP EB origin and adds CORS for `https://dangkhoaow.github.io`.
+
 The `web/` folder includes **`manifest.json`**, **`favicon.png`**, and **`icons/`** so PWA assets are not 404 on Pages.
 
 ## Backend + database (low cost)
