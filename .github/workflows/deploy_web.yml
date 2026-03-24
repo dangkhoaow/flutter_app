@@ -1,0 +1,62 @@
+# Builds Flutter web and publishes to GitHub Pages (project site: /flutter_app/).
+# Repo: https://github.com/dangkhoaow/flutter_app
+#
+# After first push: Settings → Pages → Source: GitHub Actions.
+# Add repository secret API_URL (e.g. https://your-api.example.com/api).
+# Set backend CORS_ORIGIN to https://dangkhoaow.github.io
+
+name: Deploy Flutter Web to GitHub Pages
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Build web
+        run: |
+          set -e
+          API_URL="${{ secrets.API_URL }}"
+          if [ -z "$API_URL" ]; then
+            echo "::warning::Secret API_URL is not set. Using localhost default; set API_URL in repo Settings → Secrets for production."
+            API_URL="http://localhost:3000/api"
+          fi
+          flutter build web --release \
+            --base-href /flutter_app/ \
+            --dart-define=API_URL="$API_URL"
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: build/web
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4
