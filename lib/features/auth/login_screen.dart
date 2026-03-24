@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/theme/app_theme.dart';
 import '../../shared/widgets/vib_button.dart';
+import '../dashboard/projects_provider.dart';
 import 'auth_provider.dart';
 
 // ── Login Screen ──────────────────────────────────────────────────────────────
@@ -39,6 +40,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     if (!mounted) return;
     final authState = ref.read(authStateProvider);
     authState.whenOrNull(
+      data: (user) {
+        if (user != null) ref.invalidate(projectsProvider);
+      },
       error: (e, _) => setState(
         () => _error = e.toString().replaceAll('Exception: ', ''),
       ),

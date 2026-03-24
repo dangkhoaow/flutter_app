@@ -26,11 +26,13 @@ class AppRoutes {
 // ── Router Provider ───────────────────────────────────────────────────────────
 
 final routerProvider = Provider<GoRouter>((ref) {
-  final authState = ref.watch(authStateProvider);
-
-  return GoRouter(
+  // Do not `watch` auth here: rebuilding GoRouter on every auth tick remounts the
+  // shell/dashboard and can fire `/projects` before the JWT interceptor/storage
+  // is consistently ready (401 until manual reload). One router + `refresh()`.
+  final router = GoRouter(
     initialLocation: AppRoutes.dashboard,
     redirect: (context, state) {
+      final authState = ref.read(authStateProvider);
       final isLoggedIn = authState.maybeWhen(
         data: (user) => user != null,
         orElse: () => false,
@@ -85,6 +87,10 @@ final routerProvider = Provider<GoRouter>((ref) {
       ),
     ],
   );
+
+  ref.listen(authStateProvider, (_, __) => router.refresh());
+  ref.onDispose(router.dispose);
+  return router;
 });
 
 CustomTransitionPage<void> _fade(Widget child) => CustomTransitionPage<void>(
