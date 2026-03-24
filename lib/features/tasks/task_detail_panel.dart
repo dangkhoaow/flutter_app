@@ -163,20 +163,25 @@ class TaskDetailPanel extends StatelessWidget {
     );
   }
 
-  Future<void> _confirmDelete(BuildContext context) async {
+  Future<void> _confirmDelete(BuildContext outerContext) async {
+    // Use the dialog's own BuildContext for Navigator.pop. Using the panel's
+    // outerContext here can pop the GoRouter page (blank content) instead of the
+    // dialog on web / MaterialApp.router.
     final confirm = await showDialog<bool>(
-      context: context,
-      builder: (_) => AlertDialog(
+      context: outerContext,
+      barrierDismissible: true,
+      builder: (dialogContext) => AlertDialog(
         title: const Text('Delete Task'),
         content: Text('Delete "${task.title}"? This cannot be undone.'),
         actions: [
           TextButton(
-              onPressed: () => Navigator.of(context).pop(false),
-              child: const Text('Cancel')),
-          VibButton(
-            label: 'Delete',
-            variant: VibButtonVariant.danger,
-            onPressed: () => Navigator.of(context).pop(true),
+            onPressed: () => Navigator.of(dialogContext).pop(false),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            style: TextButton.styleFrom(foregroundColor: VibColors.danger),
+            onPressed: () => Navigator.of(dialogContext).pop(true),
+            child: const Text('Delete'),
           ),
         ],
       ),
@@ -186,8 +191,8 @@ class TaskDetailPanel extends StatelessWidget {
         await ApiClient.instance.dio.delete('/tasks/${task.id}');
         onUpdated();
       } catch (e) {
-        if (context.mounted) {
-          ScaffoldMessenger.of(context)
+        if (outerContext.mounted) {
+          ScaffoldMessenger.of(outerContext)
               .showSnackBar(SnackBar(content: Text('Error: $e')));
         }
       }
