@@ -6,18 +6,18 @@ Internal project management UI. API base URL is set at **build time** via `--dar
 
 1. Push to `main`.
 2. In the GitHub repo: **Settings → Pages → Build and deployment → Source: GitHub Actions**.
-3. **API URL (build-time):** The workflow bakes in `API_URL` with this priority: secret **`API_URL`** → variable **`PUBLIC_API_URL`** → default **`http://vib-pm-flutter-backend.us-east-1.elasticbeanstalk.com/api`** (see `.github/workflows/deploy_web.yml`).
-4. On your API server, set **`CORS_ORIGIN`** to `https://dangkhoaow.github.io` (or `*` for demos only).
+3. **API URL (build-time):** The workflow bakes in `API_URL` with this priority: secret **`API_URL`** → variable **`PUBLIC_API_URL`** → default **`https://d37sgtpogq8cml.cloudfront.net/api`** (CloudFront in front of the API; see `.github/workflows/deploy_web.yml`).
+4. On your API / CloudFront origin, allow **`CORS_ORIGIN`** = `https://dangkhoaow.github.io` (or `*` for demos only).
 
 App URL (project pages): `https://dangkhoaow.github.io/flutter_app/`
 
-### HTTPS / mixed content
+**E2E check:** API health should respond at [https://d37sgtpogq8cml.cloudfront.net/health](https://d37sgtpogq8cml.cloudfront.net/health) (`{"ok":true}`). After a workflow run, the Flutter app calls **`/api/...`** on that same host.
 
-GitHub Pages is served over **HTTPS**. Browsers **block** `fetch`/XHR from that page to an **HTTP** API (mixed content). The default Elastic Beanstalk URL is **HTTP only**. If login still fails after a rebuild, open DevTools → Console and look for **mixed content** errors.
+### HTTPS / overrides
 
-**Fix:** expose the API on **HTTPS** (e.g. Elastic Beanstalk **load balancer + ACM certificate**, **CloudFront** in front of EB, or **Cloudflare** “Flexible” SSL to the origin), then set repository secret **`API_URL`** to `https://your-host/api` and run the Pages workflow again.
+GitHub Pages is **HTTPS**; the default API URL is **HTTPS (CloudFront)**, so browsers allow `fetch`/XHR for normal E2E. To point at another host, set secret **`API_URL`** or variable **`PUBLIC_API_URL`** to `https://your-host/api` and re-run the workflow.
 
-**Quick HTTPS shim:** deploy **`infra/cloudflare-worker-proxy.js`** as a [Cloudflare Worker](https://developers.cloudflare.com/workers/) (free tier), then set secret **`API_URL`** to `https://<your-worker>.<account>.workers.dev/api` and re-run the workflow. The worker forwards to the HTTP EB origin and adds CORS for `https://dangkhoaow.github.io`.
+**Optional:** **`infra/cloudflare-worker-proxy.js`** is only needed if you still serve the browser from HTTPS but the API is HTTP-only without CloudFront.
 
 The `web/` folder includes **`manifest.json`**, **`favicon.png`**, and **`icons/`** so PWA assets are not 404 on Pages.
 

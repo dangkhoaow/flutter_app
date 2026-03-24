@@ -9,7 +9,8 @@
  * Then set GitHub secret API_URL to: https://<your-worker>.<subdomain>.workers.dev/api
  * (path must end with /api to match the Flutter client.)
  *
- * Upstream is the EB instance below; change EB_ORIGIN if your API host changes.
+ * Upstream: prefer HTTPS CloudFront in CI (see deploy_web.yml). This worker targets the
+ * raw EB origin if you still need an HTTPS shim without CloudFront.
  */
 const EB_ORIGIN = 'http://vib-pm-flutter-backend.us-east-1.elasticbeanstalk.com';
 const ALLOWED_ORIGIN = 'https://dangkhoaow.github.io';
