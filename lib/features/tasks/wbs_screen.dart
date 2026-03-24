@@ -49,17 +49,29 @@ class WbsScreen extends ConsumerWidget {
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (e, _) => Center(child: Text('Error: $e')),
         data: (tasks) => Row(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            // WBS Tree (left)
-            SizedBox(
-              width: selectedTask != null ? 480 : double.infinity,
-              child: WbsTree(
-                tasks: tasks,
-                selectedId: selectedTask?.id,
-                onSelect: (t) => ref.read(selectedTaskProvider.notifier).state = t,
+            // WBS Tree: must use Expanded in Row — double.infinity width is invalid here and
+            // leaves the tree with zero / broken layout on web when no detail panel is open.
+            if (selectedTask != null)
+              SizedBox(
+                width: 480,
+                child: WbsTree(
+                  tasks: tasks,
+                  selectedId: selectedTask.id,
+                  onSelect: (t) =>
+                      ref.read(selectedTaskProvider.notifier).state = t,
+                ),
+              )
+            else
+              Expanded(
+                child: WbsTree(
+                  tasks: tasks,
+                  selectedId: null,
+                  onSelect: (t) =>
+                      ref.read(selectedTaskProvider.notifier).state = t,
+                ),
               ),
-            ),
-            // Detail panel (right — only when a task is selected)
             if (selectedTask != null) ...[
               const VerticalDivider(width: 1),
               Expanded(

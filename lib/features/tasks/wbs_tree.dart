@@ -26,8 +26,22 @@ class _WbsTreeState extends State<WbsTree> {
   @override
   void initState() {
     super.initState();
-    // Expand all top-level by default
+    _expandAllRoots(widget.tasks);
+  }
+
+  @override
+  void didUpdateWidget(WbsTree oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    // After refresh (e.g. add task), expand new top-level nodes — initState won't run again.
     for (final t in widget.tasks) {
+      if (!oldWidget.tasks.any((o) => o.id == t.id)) {
+        _expanded.add(t.id);
+      }
+    }
+  }
+
+  void _expandAllRoots(List<Task> tasks) {
+    for (final t in tasks) {
       _expanded.add(t.id);
     }
   }

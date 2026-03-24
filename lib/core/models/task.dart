@@ -1,5 +1,11 @@
 import 'package:equatable/equatable.dart';
 
+String _stringField(Object? value, {required String fallback}) {
+  if (value == null) return fallback;
+  if (value is String) return value;
+  return value.toString();
+}
+
 class Task extends Equatable {
   const Task({
     required this.id,
@@ -47,7 +53,7 @@ class Task extends Equatable {
             ? DateTime.parse(json['end_date'] as String)
             : null,
         isMilestone: json['is_milestone'] as bool? ?? false,
-        wbsPos: json['wbs_pos'] as String? ?? '0',
+        wbsPos: _stringField(json['wbs_pos'], fallback: '0'),
         children: (json['children'] as List<dynamic>?)
                 ?.map((c) => Task.fromJson(c as Map<String, dynamic>))
                 .toList() ??
