@@ -1,13 +1,23 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import '../../core/api/api_client.dart';
+import '../../core/models/project.dart';
 import '../../core/theme/app_theme.dart';
 import '../../shared/widgets/top_bar.dart';
 import '../../shared/widgets/vib_button.dart';
 import '../../shared/widgets/vib_card.dart';
-import 'new_project_dialog.dart';
 import 'project_card.dart';
-import 'projects_provider.dart';
+import 'new_project_dialog.dart';
+
+// ── Providers ─────────────────────────────────────────────────────────────────
+
+final projectsProvider = FutureProvider<List<Project>>((ref) async {
+  final resp = await ApiClient.instance.dio.get('/projects');
+  return (resp.data as List)
+      .map((p) => Project.fromJson(p as Map<String, dynamic>))
+      .toList();
+});
 
 // ── Dashboard Screen ──────────────────────────────────────────────────────────
 
